@@ -1,9 +1,19 @@
 'use client'
 
+import { useState } from 'react'
+
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 const REWARDS = ['+1', '+1', '+2', '+1', '+2', '+3', '+5']
 
 export default function BoostView() {
+  const [copied, setCopied] = useState(false)
+  const handleCopy = () => {
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }).catch(() => {})
+  }
   const dayIdx = (() => {
     const d = new Date().getDay()
     return d === 0 ? 6 : d - 1
@@ -67,8 +77,8 @@ export default function BoostView() {
               <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(187,154,247,0.15)', color: '#BB9AF7' }}>+1 попытка</span>
             </div>
             <div className="text-xs mt-1" style={{ color: '#565B7E' }}>Получи +1 попытку за каждого друга, который сыграет хотя бы 1 игру</div>
-            <button className="mt-2 w-full py-2 rounded-xl text-xs font-bold" style={{ border: '1px solid rgba(187,154,247,0.3)', color: '#BB9AF7', background: 'transparent' }}>
-              🔗 Скопировать ссылку
+            <button onClick={handleCopy} className="mt-2 w-full py-2 rounded-xl text-xs font-bold" style={{ border: '1px solid rgba(187,154,247,0.3)', color: '#BB9AF7', background: 'transparent' }}>
+              {copied ? '✓ Скопировано!' : '🔗 Скопировать ссылку'}
             </button>
           </div>
         </div>

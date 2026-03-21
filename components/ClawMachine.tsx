@@ -8,14 +8,14 @@ const BASE_RADIUS = 22
 const GRAVITY = 0.21
 const DAMPING = 0.986
 const BOUNCE = 0.44
-const DESCEND_SPEED = 3.2
+const DESCEND_SPEED_FAST = 3.6
+const DESCEND_SPEED_SLOW = 1.0   // slows near bottom for tension
 const ASCEND_SPEED = 3.8
-const TRACK_MOVE_SPEED = 0.025
 const CLAW_BUTTON_SPEED = 0.009
-const CLOSING_FRAMES = 22
+const TRACK_MOVE_SPEED = 0.028
+const CLOSING_FRAMES = 24
 const AWAITING_TIMEOUT = 210
 const CLAW_ARM_LENGTH = 36
-const CLAW_TIP = 6
 
 interface Sphere {
   x: number; y: number; radius: number
@@ -27,7 +27,7 @@ type Phase = 'idle' | 'descending' | 'closing' | 'ascending' | 'awaiting_result'
 
 interface Particle {
   x: number; y: number; vx: number; vy: number
-  life: number; colorIdx: number
+  life: number; colorIdx: number; size?: number
 }
 
 export interface GameResult {
@@ -45,41 +45,40 @@ interface Props {
   onAnimationComplete: () => void
 }
 
-function drawSphere(ctx: CanvasRenderingContext2D, sphere: Sphere, colors: SphereColor, tick: number) {
-  const { x, y, radius: r } = sphere
+function drawSphere(ctx: CanvasRenderingContext2D, s: Sphere, c: SphereColor, t: number, glow = 1) {
+  const { x, y, radius: r } = s
   ctx.save()
-  ctx.shadowColor = colors.glow
-  ctx.shadowBlur = r * 1.1
-  const grad = ctx.createRadialGradient(x - r * 0.25, y - r * 0.3, r * 0.02, x + r * 0.08, y + r * 0.08, r * 1.08)
-  grad.addColorStop(0, colors.light)
-  grad.addColorStop(0.3, colors.base)
-  grad.addColorStop(0.7, colors.dark)
-  grad.addColorStop(1, '#06060E')
-  ctx.fillStyle = grad
-  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill()
+  ctx.shadowColor = c.glow
+  ctx.shadowBlur = r * 1.1 * glow
+  const grad = ctx.createRadialGradient(x - r * .25, y - r * .3, r * .02, x + r * .08, y + r * .08, r * 1.08)
+  grad.addColorStop(0, c.light); grad.addColorStop(.3, c.base); grad.addColorStop(.7, c.dark); grad.addColorStop(1, '#06060E')
+  ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill()
   ctx.shadowBlur = 0
-  const shine = ctx.createRadialGradient(x - r * 0.28, y - r * 0.32, 0, x - r * 0.28, y - r * 0.32, r * 0.58)
-  shine.addColorStop(0, 'rgba(255,255,255,0.88)')
-  shine.addColorStop(0.45, 'rgba(255,255,255,0.38)')
-  shine.addColorStop(1, 'rgba(255,255,255,0)')
-  ctx.fillStyle = shine
-  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill()
-  ctx.fillStyle = 'rgba(255,255,255,0.82)'
-  ctx.beginPath(); ctx.arc(x - r * 0.26, y - r * 0.3, r * 0.11, 0, Math.PI * 2); ctx.fill()
-  ctx.fillStyle = 'rgba(255,255,255,0.5)'
-  ctx.beginPath(); ctx.arc(x - r * 0.12, y - r * 0.42, r * 0.055, 0, Math.PI * 2); ctx.fill()
-  const rim = ctx.createRadialGradient(x + r * 0.48, y + r * 0.52, r * 0.38, x + r * 0.48, y + r * 0.52, r * 0.82)
-  rim.addColorStop(0, 'rgba(255,255,255,0)')
-  rim.addColorStop(0.55, colors.rim + '55')
-  rim.addColorStop(1, 'rgba(255,255,255,0)')
-  ctx.fillStyle = rim
-  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill()
-  const shimmerAngle = sphere.shimmer + tick * 0.022
-  const sx = x + Math.cos(shimmerAngle) * r * 0.36
-  const sy = y + Math.sin(shimmerAngle) * r * 0.36
-  const alpha = 0.2 + 0.22 * Math.sin(tick * 0.05 + sphere.shine)
-  ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(2)})`
-  ctx.beginPath(); ctx.arc(sx, sy, r * 0.065, 0, Math.PI * 2); ctx.fill()
+  const shine = ctx.createRadialGradient(x - r * .28, y - r * .32, 0, x - r * .28, y - r * .32, r * .58)
+  shine.addColorStop(0, 'rgba(255,255,255,.88)'); shine.addColorStop(.45, 'rgba(255,255,255,.38)'); shine.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = shine; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill()
+  ctx.fillStyle = 'rgba(255,255,255,.82)'; ctx.beginPath(); ctx.arc(x - r * .26, y - r * .3, r * .11, 0, Math.PI * 2); ctx.fill()
+  ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.arc(x - r * .12, y - r * .42, r * .055, 0, Math.PI * 2); ctx.fill()
+  const rim = ctx.createRadialGradient(x + r * .48, y + r * .52, r * .38, x + r * .48, y + r * .52, r * .82)
+  rim.addColorStop(0, 'rgba(255,255,255,0)'); rim.addColorStop(.55, c.rim + '55'); rim.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = rim; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill()
+  const shimmerAngle = s.shimmer + t * .022
+  const sx = x + Math.cos(shimmerAngle) * r * .36, sy = y + Math.sin(shimmerAngle) * r * .36
+  const alpha = .2 + .22 * Math.sin(t * .05 + s.shine)
+  ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(2)})`; ctx.beginPath(); ctx.arc(sx, sy, r * .065, 0, Math.PI * 2); ctx.fill()
+  ctx.restore()
+}
+
+function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, color: string, size: number, alpha = 1) {
+  ctx.save()
+  ctx.globalAlpha = alpha
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.font = `900 ${size}px -apple-system, sans-serif`
+  ctx.shadowColor = color
+  ctx.shadowBlur = 20
+  ctx.fillStyle = color
+  ctx.fillText(text, x, y)
   ctx.restore()
 }
 
@@ -107,6 +106,7 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
   const moveDirRef = useRef<'left' | 'right' | null>(null)
   const onResolveGrabRef = useRef(onResolveGrab)
   const onAnimationCompleteRef = useRef(onAnimationComplete)
+  const tensionPulse = useRef(0)
 
   useEffect(() => { moveDirRef.current = moveDirection }, [moveDirection])
   useEffect(() => { onResolveGrabRef.current = onResolveGrab }, [onResolveGrab])
@@ -116,7 +116,7 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
   const getMaxDescent = useCallback((w: number, h: number) => {
     const floorY = h * 0.77
     const baseR = Math.min(w, h) * 0.042
-    return Math.max(0, floorY - (baseR + 30 + CLAW_ARM_LENGTH + CLAW_TIP))
+    return Math.max(0, floorY - (baseR + 30 + CLAW_ARM_LENGTH + 6))
   }, [])
 
   const initSpheres = useCallback((w: number, h: number) => {
@@ -124,7 +124,7 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
     const r = Math.min(w, h) * 0.042
     spheres.current = Array.from({ length: SPHERE_COUNT }, (_, i) => ({
       x: w * 0.12 + Math.random() * w * 0.76,
-      y: floorY - r * 0.8 - Math.random() * r * 5.5,
+      y: floorY - r * 0.8 - Math.random() * r * 5.2,
       radius: r * (0.78 + Math.random() * 0.44),
       colorIdx: i % SPHERE_COLORS.length,
       vx: (Math.random() - 0.5) * 0.3,
@@ -136,26 +136,21 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
     maxDescent.current = getMaxDescent(w, h)
   }, [getMaxDescent])
 
-  // Find nearest sphere under claw tip — called at closing frame 1 with FULL arm width
   const findCaughtSphere = useCallback((cx: number, clawY: number): number => {
     const tipY = clawY + CLAW_ARM_LENGTH
-    let best = -1
-    let bestScore = Infinity
+    let best = -1, bestScore = Infinity
     for (let i = 0; i < spheres.current.length; i++) {
       const s = spheres.current[i]
       const dx = Math.abs(s.x - cx)
-      // Sphere must be within the open claw width
-      if (dx > BASE_RADIUS + s.radius * 0.3) continue
-      // Sphere center must be near the claw tip vertically
+      if (dx > BASE_RADIUS + s.radius * 0.4) continue
       const dy = Math.abs(s.y - tipY)
-      if (dy > s.radius * 2.2) continue
+      if (dy > s.radius * 2.4) continue
       const score = dx * 0.5 + dy
       if (score < bestScore) { bestScore = score; best = i }
     }
     return best
   }, [])
 
-  // Trigger on grab button press
   useEffect(() => {
     if (grabTrigger > prevGrabTrigger.current && phase.current === 'idle') {
       prevGrabTrigger.current = grabTrigger
@@ -168,10 +163,10 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
       clawDescent.current = 0
       clawScale.current = 1
       completeFired.current = false
+      tensionPulse.current = 0
     }
   }, [grabTrigger])
 
-  // Reset idle after grab completes
   useEffect(() => {
     if (!isGrabbing && phase.current === 'done') {
       const t = setTimeout(() => {
@@ -219,7 +214,6 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
       const { w, h } = dims.current
       ctx.clearRect(0, 0, w, h)
 
-      // Background
       const bg = ctx.createLinearGradient(0, 0, 0, h)
       bg.addColorStop(0, '#111220'); bg.addColorStop(1, '#0B0C16')
       ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h)
@@ -228,35 +222,28 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
       const top = h * 0.03, bottom = h * 0.90
       const floorY = h * 0.77
 
-      // Container border glow
       ctx.save()
       ctx.shadowColor = 'rgba(187,154,247,0.3)'; ctx.shadowBlur = 22
       ctx.strokeStyle = 'rgba(187,154,247,0.18)'; ctx.lineWidth = 1.5
       ctx.beginPath(); (ctx as any).roundRect(left, top, right - left, bottom - top, 18); ctx.stroke()
       ctx.restore()
 
-      // Rainbow top strip
       const strip = ctx.createLinearGradient(left, 0, right, 0)
-      strip.addColorStop(0, 'rgba(230,184,255,0.65)')
-      strip.addColorStop(0.33, 'rgba(122,162,247,0.65)')
-      strip.addColorStop(0.66, 'rgba(255,107,157,0.65)')
-      strip.addColorStop(1, 'rgba(255,215,0,0.65)')
+      strip.addColorStop(0, 'rgba(230,184,255,0.65)'); strip.addColorStop(0.33, 'rgba(122,162,247,0.65)')
+      strip.addColorStop(0.66, 'rgba(255,107,157,0.65)'); strip.addColorStop(1, 'rgba(255,215,0,0.65)')
       ctx.fillStyle = strip
       ctx.beginPath(); (ctx as any).roundRect(left, top, right - left, 5, [18, 18, 0, 0]); ctx.fill()
 
-      // Dot grid
       ctx.fillStyle = 'rgba(187,154,247,0.05)'
       for (let gx = left + 24; gx < right; gx += 28)
         for (let gy = top + 24; gy < floorY; gy += 28) {
           ctx.beginPath(); ctx.arc(gx, gy, 1.1, 0, Math.PI * 2); ctx.fill()
         }
 
-      // Floor
       ctx.fillStyle = 'rgba(6,6,16,0.97)'; ctx.fillRect(left, floorY, right - left, bottom - floorY)
       ctx.strokeStyle = 'rgba(187,154,247,0.22)'; ctx.lineWidth = 1
       ctx.beginPath(); ctx.moveTo(left, floorY); ctx.lineTo(right, floorY); ctx.stroke()
 
-      // Chute slot
       const chuteW = (right - left) * 0.44
       const chuteX = left + (right - left - chuteW) / 2
       ctx.save()
@@ -265,33 +252,36 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
       ctx.beginPath()
       ctx.moveTo(chuteX, bottom - 2); ctx.lineTo(chuteX + 12, bottom + 18)
       ctx.lineTo(chuteX + chuteW - 12, bottom + 18); ctx.lineTo(chuteX + chuteW, bottom - 2)
-      ctx.stroke()
-      ctx.restore()
+      ctx.stroke(); ctx.restore()
 
-      // ── Claw X movement ──────────────────────────────────────
+      // ── Claw movement ────────────────────────────────────────
       const ph = phase.current
       if (ph === 'idle') {
         const dir = moveDirRef.current
         if (dir === 'left') targetX.current = Math.max(0.05, targetX.current - CLAW_BUTTON_SPEED)
         if (dir === 'right') targetX.current = Math.min(0.95, targetX.current + CLAW_BUTTON_SPEED)
       }
-      const dx = targetX.current - clawX.current
-      if (Math.abs(dx) > 0.001) clawX.current += Math.sign(dx) * Math.min(TRACK_MOVE_SPEED, Math.abs(dx))
+      const dx2 = targetX.current - clawX.current
+      if (Math.abs(dx2) > 0.001) clawX.current += Math.sign(dx2) * Math.min(TRACK_MOVE_SPEED, Math.abs(dx2))
 
       const cx = left + (right - left) * clawX.current
       const trackY = top + 18
-      const descent = clawDescent.current
       const armW = BASE_RADIUS * clawScale.current
 
-      // ── Phase logic ───────────────────────────────────────────
+      // ── Phase logic ──────────────────────────────────────────
       if (ph === 'descending') {
-        clawDescent.current = Math.min(clawDescent.current + DESCEND_SPEED, maxDescent.current)
+        const progress = clawDescent.current / maxDescent.current
+        // Slow down in the last 25% for tension
+        const speed = progress > 0.75
+          ? DESCEND_SPEED_SLOW + (DESCEND_SPEED_FAST - DESCEND_SPEED_SLOW) * (1 - (progress - 0.75) / 0.25)
+          : DESCEND_SPEED_FAST
+        clawDescent.current = Math.min(clawDescent.current + speed, maxDescent.current)
+        tensionPulse.current = (tensionPulse.current + 0.12) % (Math.PI * 2)
         const cy = trackY + 30 + clawDescent.current
-        // Push spheres gently out of way
         for (const s of spheres.current) {
           const sdx = s.x - cx, sdy = s.y - (cy + 16)
           if (Math.abs(sdx) < armW && sdy > -s.radius && sdy < 32 + s.radius) {
-            s.vx += sdx >= 0 ? 0.4 : -0.4; s.vy -= 0.1
+            s.vx += sdx >= 0 ? 0.35 : -0.35; s.vy -= 0.08
           }
         }
         if (clawDescent.current >= maxDescent.current) { phase.current = 'closing'; closingFrame.current = 0 }
@@ -300,37 +290,28 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
       if (ph === 'closing') {
         closingFrame.current++
         const targetScale = caughtIdx.current >= 0
-          ? Math.max(0.1, (caughtRadius.current * 0.85) / BASE_RADIUS)
-          : 0.1
+          ? Math.max(0.1, (caughtRadius.current * 0.85) / BASE_RADIUS) : 0.1
         clawScale.current = Math.max(clawScale.current - 0.05, targetScale)
 
-        // ── CATCHING: check at frame 1, before claw closes ───
         if (closingFrame.current === 1) {
           const cy = trackY + 30 + clawDescent.current
           const found = findCaughtSphere(cx, cy)
           if (found >= 0) {
             caughtIdx.current = found
             caughtRadius.current = spheres.current[found].radius
-            spheres.current[found].vx = 0
-            spheres.current[found].vy = 0
+            spheres.current[found].vx = 0; spheres.current[found].vy = 0
           }
           if (!resolvedRef.current) {
             onResolveGrabRef.current(Math.round(clawX.current * 100), found >= 0)
             resolvedRef.current = true
           }
         }
-
-        // Push uncaught spheres away
-        if (caughtIdx.current < 0 && closingFrame.current <= 8) {
+        if (caughtIdx.current < 0 && closingFrame.current <= 6) {
           for (const s of spheres.current) {
             const sdx = s.x - cx
-            if (Math.abs(sdx) < 40) {
-              s.vx += (sdx > 0 ? 3.5 : -3.5) + (Math.random() - 0.5)
-              s.vy -= 2 + Math.random() * 1.5
-            }
+            if (Math.abs(sdx) < 42) { s.vx += sdx > 0 ? 3 : -3; s.vy -= 1.8 + Math.random() }
           }
         }
-
         if (closingFrame.current >= CLOSING_FRAMES) phase.current = 'ascending'
       }
 
@@ -343,7 +324,6 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
           spheres.current[ci].y = cy + CLAW_ARM_LENGTH - caughtRadius.current * 0.5
           spheres.current[ci].vx = 0; spheres.current[ci].vy = 0
         }
-        // Drop mid-ascent if not win
         if (ci >= 0 && !droppedRef.current && outcomeRef.current && outcomeRef.current.outcome !== 'win' && clawDescent.current <= maxDescent.current * 0.45) {
           if (spheres.current[ci]) { spheres.current[ci].vx = (Math.random() - 0.5) * 4; spheres.current[ci].vy = -2 }
           caughtIdx.current = -1; droppedRef.current = true
@@ -370,22 +350,38 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
         }
       }
 
+      // ── prize_fly: sphere flies UP with fireworks ─────────────
       if (ph === 'prize_fly') {
         closingFrame.current++
         const ci = caughtIdx.current
-        const midX = left + (right - left) / 2
-        const exitY = bottom + 10
         if (ci >= 0 && spheres.current[ci]) {
           const s = spheres.current[ci]
-          s.x += (midX - s.x) * 0.14; s.y += (exitY - s.y) * 0.14
-          if (closingFrame.current >= 28) {
-            for (let i = 0; i < 24; i++) particles.current.push({
-              x: s.x, y: s.y,
-              vx: (Math.random() - 0.5) * 8, vy: Math.random() * -7 - 1,
-              life: 1, colorIdx: s.colorIdx,
+          // Fly straight UP
+          s.y -= 8 + closingFrame.current * 0.3
+          s.x += (cx - s.x) * 0.08
+          // Particle trail while rising
+          if (t % 2 === 0) {
+            particles.current.push({
+              x: s.x + (Math.random() - 0.5) * s.radius,
+              y: s.y + s.radius * 0.5,
+              vx: (Math.random() - 0.5) * 3, vy: 1 + Math.random() * 2,
+              life: 0.7, colorIdx: s.colorIdx, size: 3,
             })
-            if (particles.current.length > 200) particles.current = particles.current.slice(-200)
-            spheres.current.splice(ci, 1); caughtIdx.current = -1
+          }
+          // Big explosion when sphere exits top
+          if (s.y < top - s.radius || closingFrame.current >= 38) {
+            // 60-particle fireworks
+            for (let i = 0; i < 60; i++) {
+              const angle = (i / 60) * Math.PI * 2
+              const speed = 4 + Math.random() * 8
+              particles.current.push({
+                x: s.x, y: Math.max(s.y, top + 20),
+                vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 3,
+                life: 1, colorIdx: Math.floor(Math.random() * SPHERE_COLORS.length), size: 5,
+              })
+            }
+            spheres.current.splice(ci, 1)
+            caughtIdx.current = -1
             phase.current = 'done'; closingFrame.current = 0
           }
         } else { phase.current = 'done'; closingFrame.current = 0 }
@@ -425,21 +421,28 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
         }
       }
 
-      // Draw spheres (caught on top)
+      // ── Glow on spheres near claw (tension effect) ────────────
+      const clawTipY = trackY + 30 + clawDescent.current + CLAW_ARM_LENGTH
       for (let i = spheres.current.length - 1; i >= 0; i--) {
-        if (i !== ci) drawSphere(ctx, spheres.current[i], SPHERE_COLORS[spheres.current[i].colorIdx], t)
+        const s = spheres.current[i]
+        const distToClaw = Math.sqrt((s.x - cx) ** 2 + (s.y - clawTipY) ** 2)
+        const glowFactor = ph === 'descending' ? Math.max(1, 2.5 - distToClaw / 40) : 1
+        if (i !== ci) drawSphere(ctx, s, SPHERE_COLORS[s.colorIdx], t, glowFactor)
       }
-      if (ci >= 0 && spheres.current[ci]) drawSphere(ctx, spheres.current[ci], SPHERE_COLORS[spheres.current[ci].colorIdx], t)
+      if (ci >= 0 && spheres.current[ci]) drawSphere(ctx, spheres.current[ci], SPHERE_COLORS[spheres.current[ci].colorIdx], t, 2.5)
 
-      // Particles
+      // ── Particles ─────────────────────────────────────────────
       for (let i = particles.current.length - 1; i >= 0; i--) {
         const p = particles.current[i]
-        p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= 0.03
+        p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.vx *= 0.97; p.life -= 0.025
         if (p.life <= 0) { particles.current.splice(i, 1); continue }
         const c = SPHERE_COLORS[p.colorIdx]
         ctx.save(); ctx.globalAlpha = p.life; ctx.fillStyle = c.base
-        ctx.beginPath(); ctx.arc(p.x, p.y, 4 * p.life, 0, Math.PI * 2); ctx.fill(); ctx.restore()
+        ctx.shadowColor = c.glow; ctx.shadowBlur = 8
+        const sz = (p.size || 4) * p.life
+        ctx.beginPath(); ctx.arc(p.x, p.y, sz, 0, Math.PI * 2); ctx.fill(); ctx.restore()
       }
+      if (particles.current.length > 300) particles.current = particles.current.slice(-300)
 
       // ── Track ─────────────────────────────────────────────────
       ctx.save()
@@ -451,8 +454,7 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
       ctx.fillStyle = dotGrad; ctx.beginPath(); ctx.arc(cx, trackY, 8, 0, Math.PI * 2); ctx.fill()
       ctx.restore()
 
-      // Rope
-      const ropeY = trackY + 30 + descent
+      const ropeY = trackY + 30 + clawDescent.current
       ctx.save(); ctx.setLineDash([5, 5])
       ctx.strokeStyle = 'rgba(187,154,247,0.3)'; ctx.lineWidth = 1.5
       ctx.beginPath(); ctx.moveTo(cx, trackY + 8); ctx.lineTo(cx, ropeY); ctx.stroke()
@@ -468,6 +470,31 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
       ctx.beginPath(); ctx.moveTo(cx + 3, ropeY); ctx.lineTo(cx + armW, ropeY + 25); ctx.stroke()
       ctx.beginPath(); ctx.moveTo(cx + armW, ropeY + 25); ctx.lineTo(cx + armW - 5, ropeY + CLAW_ARM_LENGTH); ctx.stroke()
       ctx.restore()
+
+      // ── Tension status text ──────────────────────────────────
+      if (ph === 'descending') {
+        const progress = clawDescent.current / maxDescent.current
+        if (progress > 0.65) {
+          const alpha = Math.min(1, (progress - 0.65) / 0.15) * (0.7 + 0.3 * Math.sin(tensionPulse.current * 3))
+          drawText(ctx, 'ЦЕЛЬ В ПРИЦЕЛЕ...', w / 2, top + 28, '#FFD700', 13, alpha)
+        }
+      }
+      if (ph === 'closing') {
+        const pulse = 0.8 + 0.2 * Math.sin(t * 0.3)
+        drawText(ctx, '⚡ ХВАТАЮ! ⚡', w / 2, top + 28, '#FF6B9D', 14, pulse)
+      }
+      if (ph === 'ascending' && ci >= 0) {
+        const pulse = 0.8 + 0.2 * Math.sin(t * 0.2)
+        drawText(ctx, '🎯 ПОДНИМАЮ...', w / 2, top + 28, '#9ECE6A', 13, pulse)
+      }
+      if (ph === 'prize_fly') {
+        const pulse = 0.9 + 0.1 * Math.sin(t * 0.4)
+        drawText(ctx, '🏆 ПОБЕДА! 🏆', w / 2, h / 2, '#FFD700', 22, pulse)
+      }
+      if (ph === 'awaiting_result') {
+        const dots = '.'.repeat(1 + (Math.floor(t / 15) % 3))
+        drawText(ctx, `Определяю результат${dots}`, w / 2, top + 28, '#BB9AF7', 12, 0.8)
+      }
 
       raf = requestAnimationFrame(loop)
     }
