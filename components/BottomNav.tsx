@@ -14,22 +14,26 @@ const TABS: { view: View; label: string; icon: string }[] = [
 
 export default function BottomNav({ current, onChange }: Props) {
   return (
-    <nav className="glass-panel border-t border-[rgba(230,184,255,0.1)] flex-shrink-0">
-      <div className="flex items-center justify-around px-4 py-2">
-        {TABS.map(tab => (
-          <button
-            key={tab.view}
-            onClick={() => onChange(tab.view)}
-            className={`flex flex-col items-center gap-0.5 px-6 py-1.5 rounded-xl transition-all ${
-              current === tab.view
-                ? 'text-[#BB9AF7]'
-                : 'text-muted-foreground hover:text-[#C0CAF5]'
-            }`}
-          >
-            <span className="text-xl">{tab.icon}</span>
-            <span className="text-[10px] font-semibold">{tab.label}</span>
-          </button>
-        ))}
+    <nav className="flex-shrink-0 border-t" style={{ borderColor: 'rgba(187,154,247,0.12)', background: 'rgba(17,18,32,0.95)', backdropFilter: 'blur(16px)' }}>
+      <div className="flex items-center">
+        {TABS.map(tab => {
+          const active = current === tab.view
+          return (
+            <button
+              key={tab.view}
+              onClick={() => onChange(tab.view)}
+              className="flex-1 flex flex-col items-center gap-1 py-3 transition-all duration-200 relative"
+              style={{ color: active ? '#BB9AF7' : 'rgba(192,202,245,0.45)' }}
+            >
+              {active && (
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 rounded-full"
+                  style={{ background: 'linear-gradient(90deg, #BB9AF7, #7AA2F7)' }} />
+              )}
+              <span className="text-2xl">{tab.icon}</span>
+              <span className="text-xs font-semibold">{tab.label}</span>
+            </button>
+          )
+        })}
       </div>
     </nav>
   )

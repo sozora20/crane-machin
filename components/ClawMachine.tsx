@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useCallback, useState } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
 import { SPHERE_COLORS, type SphereColor } from '@/data/colors'
 
 // ─── Constants ────────────────────────────────────────────────
@@ -40,12 +40,11 @@ export interface GameResult {
 }
 
 interface Props {
-  onGrab: (clawPosition: number) => void
+  grabTrigger: number
   onResolveGrab: (position: number, caught: boolean) => void
   isGrabbing: boolean
   result: GameResult | null
   onAnimationComplete: () => void
-  disabled?: boolean
 }
 
 // ─── Sphere Renderer ──────────────────────────────────────────
@@ -93,7 +92,7 @@ function drawSphere(ctx: CanvasRenderingContext2D, sphere: Sphere, colors: Spher
 }
 
 // ─── Main Component ───────────────────────────────────────────
-export default function ClawMachine({ onGrab, onResolveGrab, isGrabbing, result, onAnimationComplete, disabled }: Props) {
+export default function ClawMachine({ grabTrigger, onResolveGrab, isGrabbing, result, onAnimationComplete }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const tick = useRef(0)
   const targetX = useRef(0.5)
@@ -112,7 +111,8 @@ export default function ClawMachine({ onGrab, onResolveGrab, isGrabbing, result,
   const spheres = useRef<Sphere[]>([])
   const particles = useRef<Particle[]>([])
   const dims = useRef({ w: 390, h: 520 })
-  const [showResult, setShowResult] = useState(false)
+  const showResultRef = useRef(false)
+  const prevGrabTrigger = useRef(0)
 
   const getMaxDescent = useCallback((w: number, h: number) => {
     const floorY = h * 0.77
@@ -156,6 +156,23 @@ export default function ClawMachine({ onGrab, onResolveGrab, isGrabbing, result,
   useEffect(() => {
     if (result) outcomeRef.current = result
   }, [result])
+
+  // Trigger grab from button
+  useEffect(() => {
+    if (grabTrigger > prevGrabTrigger.current && phase.current === 'idle') {
+      prevGrabTrigger.current = grabTrigger
+      targetX.current = Math.random()
+      phase.current = 'descending'
+      resolvedRef.current = false
+      droppedRef.current = false
+      outcomeRef.current = null
+      caughtIdx.current = -1
+      caughtRadius.current = 0
+      clawDescent.current = 0
+      clawScale.current = 1
+      showResultRef.current = false
+    }
+  }, [grabTrigger])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -297,7 +314,6 @@ export default function ClawMachine({ onGrab, onResolveGrab, isGrabbing, result,
           spheres.current[ci].x = cx; spheres.current[ci].y = cy + 16
           spheres.current[ci].vx = 0; spheres.current[ci].vy = 0
         }
-        // Drop mid-ascent if outcome is not win
         if (ci >= 0 && !droppedRef.current && outcomeRef.current && outcomeRef.current.outcome !== 'win' && clawDescent.current <= maxDescent.current * 0.45) {
           if (spheres.current[ci]) { spheres.current[ci].vx = (Math.random() - 0.5) * 4; spheres.current[ci].vy = -2 }
           caughtIdx.current = -1; droppedRef.current = true
@@ -342,7 +358,10 @@ export default function ClawMachine({ onGrab, onResolveGrab, isGrabbing, result,
 
       if (ph === 'done') {
         closingFrame.current++
-        if (closingFrame.current === 1) setShowResult(true)
+        if (closingFrame.current === 1) {
+          // Signal completion after animation delay
+          setTimeout(() => onAnimationComplete(), 2500)
+        }
       }
 
       // ─── Physics update ───────────────────────────────────────
@@ -355,7 +374,6 @@ export default function ClawMachine({ onGrab, onResolveGrab, isGrabbing, result,
         if (s.y + s.radius > floorY) { s.y = floorY - s.radius; s.vy = -s.vy * BOUNCE; s.vx *= 0.91; if (Math.abs(s.vy) < 0.45) s.vy = 0 }
         if (s.x - s.radius < left + 5) { s.x = left + 5 + s.radius; s.vx = Math.abs(s.vx) * BOUNCE }
         if (s.x + s.radius > right - 5) { s.x = right - 5 - s.radius; s.vx = -Math.abs(s.vx) * BOUNCE }
-        // Sphere-sphere collisions
         for (let j = i + 1; j < spheres.current.length; j++) {
           if (j === ci) continue
           const b = spheres.current[j]
@@ -372,7 +390,7 @@ export default function ClawMachine({ onGrab, onResolveGrab, isGrabbing, result,
         }
       }
 
-      // Draw spheres (caught last)
+      // Draw spheres
       for (let i = spheres.current.length - 1; i >= 0; i--) {
         if (i !== ci) drawSphere(ctx, spheres.current[i], SPHERE_COLORS[spheres.current[i].colorIdx], t)
       }
@@ -388,7 +406,7 @@ export default function ClawMachine({ onGrab, onResolveGrab, isGrabbing, result,
         ctx.beginPath(); ctx.arc(p.x, p.y, 4 * p.life, 0, Math.PI * 2); ctx.fill(); ctx.restore()
       }
 
-      // ─── Draw track ────────────────────────────────────────────
+      // ─── Draw track ───────────────────────────────────────────
       ctx.save()
       ctx.strokeStyle = 'rgba(187,154,247,0.16)'; ctx.lineWidth = 7; ctx.lineCap = 'round'
       ctx.beginPath(); ctx.moveTo(left + 16, trackY); ctx.lineTo(right - 16, trackY); ctx.stroke()
@@ -411,10 +429,8 @@ export default function ClawMachine({ onGrab, onResolveGrab, isGrabbing, result,
       ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'
       ctx.shadowColor = '#E6B8FF'; ctx.shadowBlur = 16
       ctx.strokeStyle = clawGrad; ctx.lineWidth = 3.5
-      // Left arm
       ctx.beginPath(); ctx.moveTo(cx - 3, ropeY); ctx.lineTo(cx - armW, ropeY + 25); ctx.stroke()
       ctx.beginPath(); ctx.moveTo(cx - armW, ropeY + 25); ctx.lineTo(cx - armW + 5, ropeY + CLAW_ARM_LENGTH); ctx.stroke()
-      // Right arm
       ctx.beginPath(); ctx.moveTo(cx + 3, ropeY); ctx.lineTo(cx + armW, ropeY + 25); ctx.stroke()
       ctx.beginPath(); ctx.moveTo(cx + armW, ropeY + 25); ctx.lineTo(cx + armW - 5, ropeY + CLAW_ARM_LENGTH); ctx.stroke()
       ctx.restore()
@@ -423,22 +439,7 @@ export default function ClawMachine({ onGrab, onResolveGrab, isGrabbing, result,
     }
     raf = requestAnimationFrame(loop)
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize) }
-  }, [initSpheres, getMaxDescent, findCaughtSphere, onResolveGrab])
-
-  // Sync isGrabbing → start descent
-  useEffect(() => {
-    if (isGrabbing && phase.current === 'idle') {
-      phase.current = 'descending'
-      resolvedRef.current = false
-      droppedRef.current = false
-      outcomeRef.current = null
-      caughtIdx.current = -1
-      caughtRadius.current = 0
-      clawDescent.current = 0
-      clawScale.current = 1
-      setShowResult(false)
-    }
-  }, [isGrabbing])
+  }, [initSpheres, getMaxDescent, findCaughtSphere, onResolveGrab, onAnimationComplete])
 
   // Reset after done
   useEffect(() => {
@@ -451,23 +452,13 @@ export default function ClawMachine({ onGrab, onResolveGrab, isGrabbing, result,
         droppedRef.current = false
         resolvedRef.current = false
         outcomeRef.current = null
-        setShowResult(false)
-        onAnimationComplete()
-      }, 2500)
+      }, 2600)
       return () => clearTimeout(timer)
     }
-  }, [isGrabbing, onAnimationComplete])
-
-  const handleClick = useCallback(() => {
-    if (disabled) return
-    if (phase.current === 'idle') {
-      targetX.current = Math.random()
-      onGrab(clawX.current)
-    }
-  }, [disabled, onGrab])
+  }, [isGrabbing])
 
   return (
-    <div className="relative w-full h-full" onClick={handleClick} style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}>
+    <div className="relative w-full h-full">
       <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   )
