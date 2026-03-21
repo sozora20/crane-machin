@@ -33,59 +33,69 @@ function addOsc(
   osc.start(startT); osc.stop(startT + dur)
 }
 
-// Dramatic noir theme: Am → F → C → E (minor loop)
-// Bass + melody in dark minor key
+// Meditative pentatonic theme: C major pentatonic (C D E G A)
+// Slow, peaceful, ~50 BPM, sine waves + soft pads
 function buildTheme(ctx: AudioContext, master: AudioNode, loopDur: number, stopped: () => boolean) {
-  const BPM = 58
+  const BPM = 50
   const BEAT = 60 / BPM
-  const MEAS = BEAT * 4
 
-  // Bass line pattern (Am minor feel)
-  const bassNotes = [
-    // Am        F           C           E
-    [110.0, 4], [87.31, 2], [87.31, 2],
-    [130.81, 2], [130.81, 2],
-    [164.81, 2], [155.56, 2],
-    [110.0, 4],
+  // Melody: slow ascending/descending pentatonic phrases
+  const melodyLine = [
+    [523.25, 3],  // C5
+    [440.00, 1],  // A4
+    [523.25, 2],  // C5
+    [659.25, 4],  // E5
+    [587.33, 2],  // D5
+    [523.25, 2],  // C5
+    [440.00, 3],  // A4
+    [392.00, 1],  // G4
+    [440.00, 2],  // A4
+    [523.25, 2],  // C5
+    [392.00, 3],  // G4
+    [329.63, 2],  // E4
+    [392.00, 2],  // G4
+    [440.00, 3],  // A4
+    [523.25, 4],  // C5
   ]
 
-  // Melody in Am (dark, brooding)
-  const melodyLine = [
-    // pitch, beats, delay
-    [440.0, 1.5], [392.0, 0.5], [349.23, 2],
-    [392.0, 1], [440.0, 1], [523.25, 2],
-    [493.88, 1.5], [440.0, 0.5], [392.0, 2],
-    [349.23, 1], [329.63, 1], [293.66, 2],
+  // Bass: C2 → G2 → A2 pedal tones
+  const bassNotes = [
+    [65.41, 8],   // C2
+    [98.00, 4],   // G2
+    [65.41, 4],   // C2
+    [110.0, 4],   // A2
+    [73.42, 4],   // D2
+    [65.41, 8],   // C2
   ]
 
   const schedule = (startTime: number) => {
     if (stopped()) return
-    let bt = startTime
 
-    // Bass
-    bassNotes.forEach(([freq, beats]) => {
-      addOsc(ctx, master, freq as number, 'sawtooth', bt, (beats as number) * BEAT * 0.85, 0.18, 0.05, 0.2)
-      addOsc(ctx, master, (freq as number) * 2, 'sine', bt, (beats as number) * BEAT * 0.7, 0.06, 0.02, 0.15)
-      bt += (beats as number) * BEAT
-    })
-
-    // Melody (starts 2 beats after bass)
-    let mt = startTime + BEAT * 2
+    // Melody — sine, very slow attack/release for meditative feel
+    let mt = startTime + BEAT * 0.5
     melodyLine.forEach(([freq, beats]) => {
-      addOsc(ctx, master, freq as number, 'triangle', mt, (beats as number) * BEAT * 0.8, 0.12, 0.05, 0.3)
+      addOsc(ctx, master, freq as number, 'sine', mt, (beats as number) * BEAT * 0.88, 0.10, 0.6, 0.8)
+      // Faint octave below for warmth
+      addOsc(ctx, master, (freq as number) * 0.5, 'sine', mt, (beats as number) * BEAT * 0.7, 0.03, 0.5, 0.7)
       mt += (beats as number) * BEAT
     })
 
-    // Pad chords underneath
+    // Bass — soft sine
+    let bt = startTime
+    bassNotes.forEach(([freq, beats]) => {
+      addOsc(ctx, master, freq as number, 'sine', bt, (beats as number) * BEAT * 0.9, 0.07, 0.3, 0.5)
+      bt += (beats as number) * BEAT
+    })
+
+    // Sustained pad chords (C major pentatonic harmony)
+    const padDur = loopDur * 0.5
     const pads = [
-      [110.0, 138.59, 164.81], // Am
-      [87.31, 110.0, 130.81],  // F
-      [130.81, 164.81, 196.0], // C
-      [164.81, 196.0, 246.94], // Em
+      [130.81, 164.81, 196.00],  // C3 E3 G3
+      [196.00, 246.94, 293.66],  // G3 B3 D4
     ]
     pads.forEach((chord, i) => {
       chord.forEach(freq => {
-        addOsc(ctx, master, freq, 'sine', startTime + i * MEAS, MEAS * 0.95, 0.05, 0.4, 0.6)
+        addOsc(ctx, master, freq, 'sine', startTime + i * padDur, padDur * 0.95, 0.04, 1.2, 1.5)
       })
     })
 
@@ -118,7 +128,7 @@ export default function AmbientMusic() {
       master.connect(revG); revG.connect(conv); conv.connect(ctx.destination)
 
       stoppedRef.current = false
-      const LOOP_DUR = 32 // seconds per full loop
+      const LOOP_DUR = 44 // seconds per full loop (36 beats × 1.2s at 50 BPM)
 
       const schedule = buildTheme(ctx, master, LOOP_DUR, () => stoppedRef.current)
       schedule(ctx.currentTime + 0.3)

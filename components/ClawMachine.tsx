@@ -101,7 +101,7 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
   const spheres = useRef<Sphere[]>([])
   const particles = useRef<Particle[]>([])
   const dims = useRef({ w: 390, h: 480 })
-  const prevGrabTrigger = useRef(0)
+  const prevGrabTrigger = useRef(grabTrigger)  // init to current so remount doesn't auto-trigger
   const completeFired = useRef(false)
   const moveDirRef = useRef<'left' | 'right' | null>(null)
   const onResolveGrabRef = useRef(onResolveGrab)
@@ -142,9 +142,9 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
     for (let i = 0; i < spheres.current.length; i++) {
       const s = spheres.current[i]
       const dx = Math.abs(s.x - cx)
-      if (dx > BASE_RADIUS + s.radius * 0.4) continue
+      if (dx > s.radius * 0.85) continue  // must aim within sphere radius — precision required
       const dy = Math.abs(s.y - tipY)
-      if (dy > s.radius * 2.4) continue
+      if (dy > s.radius * 2.2) continue
       const score = dx * 0.5 + dy
       if (score < bestScore) { bestScore = score; best = i }
     }
@@ -440,6 +440,43 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
         ctx.beginPath(); ctx.arc(p.x, p.y, sz, 0, Math.PI * 2); ctx.fill(); ctx.restore()
       }
       if (particles.current.length > 300) particles.current = particles.current.slice(-300)
+
+      // ── Aim indicator (idle phase only) ───────────────────────
+      if (ph === 'idle') {
+        let aimIdx = -1, bestAim = Infinity
+        for (let i = 0; i < spheres.current.length; i++) {
+          const s = spheres.current[i]
+          const adx = Math.abs(s.x - cx)
+          if (adx < s.radius * 0.85 && adx < bestAim) { bestAim = adx; aimIdx = i }
+        }
+        const inRange = aimIdx >= 0
+        // Shadow ellipse on floor
+        ctx.save()
+        ctx.shadowColor = inRange ? 'rgba(0,255,120,0.7)' : 'rgba(180,180,220,0.35)'
+        ctx.shadowBlur = inRange ? 18 : 8
+        ctx.strokeStyle = inRange ? 'rgba(0,255,120,0.85)' : 'rgba(160,160,200,0.4)'
+        ctx.lineWidth = inRange ? 2 : 1.5
+        ctx.beginPath(); ctx.ellipse(cx, floorY - 4, inRange ? 20 : 13, 5, 0, 0, Math.PI * 2); ctx.stroke()
+        ctx.restore()
+        // Dashed vertical aim line
+        ctx.save()
+        ctx.setLineDash([3, 7])
+        ctx.strokeStyle = inRange ? 'rgba(0,255,120,0.25)' : 'rgba(160,160,200,0.12)'
+        ctx.lineWidth = 1
+        ctx.beginPath(); ctx.moveTo(cx, trackY + 12); ctx.lineTo(cx, floorY - 10); ctx.stroke()
+        ctx.setLineDash([]); ctx.restore()
+        // Highlight targeted sphere
+        if (aimIdx >= 0 && spheres.current[aimIdx]) {
+          const ts = spheres.current[aimIdx]
+          const pulse = 0.75 + 0.25 * Math.sin(t * 0.12)
+          ctx.save()
+          ctx.globalAlpha = pulse
+          ctx.shadowColor = 'rgba(0,255,120,0.9)'; ctx.shadowBlur = 22
+          ctx.strokeStyle = 'rgba(0,255,120,0.9)'; ctx.lineWidth = 2.5
+          ctx.beginPath(); ctx.arc(ts.x, ts.y, ts.radius + 6, 0, Math.PI * 2); ctx.stroke()
+          ctx.restore()
+        }
+      }
 
       // ── Track ─────────────────────────────────────────────────
       ctx.save()
