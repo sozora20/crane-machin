@@ -8,12 +8,12 @@ const BASE_RADIUS = 22
 const GRAVITY = 0.21
 const DAMPING = 0.986
 const BOUNCE = 0.44
-const DESCEND_SPEED_FAST = 3.6
-const DESCEND_SPEED_SLOW = 1.0   // slows near bottom for tension
-const ASCEND_SPEED = 3.8
+const DESCEND_SPEED_FAST = 5.5
+const DESCEND_SPEED_SLOW = 1.2   // slows near bottom for tension
+const ASCEND_SPEED = 6.5
 const CLAW_BUTTON_SPEED = 0.009
 const TRACK_MOVE_SPEED = 0.028
-const CLOSING_FRAMES = 24
+const CLOSING_FRAMES = 16
 const AWAITING_TIMEOUT = 210
 const CLAW_ARM_LENGTH = 36
 
@@ -388,7 +388,7 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
             outcomeRef.current = null
             completeFired.current = false
             onAnimationCompleteRef.current()
-          }, 2500)
+          }, 1500)
         }
       }
 

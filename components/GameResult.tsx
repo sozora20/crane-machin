@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import type { GameResult } from './ClawMachine'
 import DollarRain from './DollarRain'
 import { playWinSound } from '@/lib/winSound'
+import { playLoseSound } from '@/lib/loseSound'
 
 interface Props {
   result: GameResult | null
@@ -20,6 +21,9 @@ export default function GameResultOverlay({ result, visible }: Props) {
       setShowDollars(true)
       playWinSound()
       setTimeout(() => setShowDollars(false), 4000)
+    } else if (visible && (result?.outcome === 'miss' || result?.outcome === 'drop')) {
+      setTimeout(() => setAnimate(true), 50)
+      playLoseSound()
     } else if (visible) {
       setTimeout(() => setAnimate(true), 50)
     } else {

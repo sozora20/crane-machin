@@ -69,7 +69,7 @@ export default function Home() {
     setIsGrabbing(false)
     setShowResult(true)
     if (resultRef.current) updateLocalStats(resultRef.current.outcome)
-    setTimeout(() => setShowResult(false), 3500)
+    setTimeout(() => setShowResult(false), 2500)
   }, [])
 
   const startMove = useCallback((dir: 'left' | 'right') => {
