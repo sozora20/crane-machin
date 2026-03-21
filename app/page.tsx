@@ -6,6 +6,7 @@ import BottomNav from '@/components/BottomNav'
 import HistoryView from '@/components/HistoryView'
 import BoostView from '@/components/BoostView'
 import ProfileView from '@/components/ProfileView'
+import AmbientMusic from '@/components/AmbientMusic'
 import type { GameResult } from '@/components/ClawMachine'
 import GameResultOverlay from '@/components/GameResult'
 
@@ -68,7 +69,7 @@ export default function Home() {
     setIsGrabbing(false)
     setShowResult(true)
     if (resultRef.current) updateLocalStats(resultRef.current.outcome)
-    setTimeout(() => setShowResult(false), 3000)
+    setTimeout(() => setShowResult(false), 3500)
   }, [])
 
   const startMove = useCallback((dir: 'left' | 'right') => {
@@ -78,22 +79,25 @@ export default function Home() {
   const stopMove = useCallback(() => setMoveDir(null), [])
 
   return (
-    <div className="flex flex-col h-dvh max-w-md mx-auto" style={{ background: '#1A1B26' }}>
+    <div className="game-root">
       {/* Header */}
-      <header className="flex-shrink-0 px-4 pt-3 pb-2 flex items-center justify-between">
-        <h1 className="text-base font-black gradient-text">🎰 Grab-a-Prize</h1>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold"
-          style={{ background: 'rgba(187,154,247,0.12)', color: '#BB9AF7' }}>
-          <span>♾️</span>
-          <span>попыток</span>
+      <header className="game-header">
+        <h1 className="gradient-text font-black text-base sm:text-lg tracking-tight">🎰 Grab-a-Prize</h1>
+        <div className="flex items-center gap-2">
+          <AmbientMusic />
+          <div className="attempts-badge">
+            <span>♾️</span>
+            <span className="hidden xs:inline">попыток</span>
+          </div>
         </div>
       </header>
 
       {/* Content */}
-      <main className="flex-1 relative overflow-hidden flex flex-col min-h-0">
+      <main className="game-main">
         {view === 'game' ? (
           <>
-            <div className="flex-1 relative min-h-0">
+            {/* Canvas */}
+            <div className="game-canvas-area">
               <ClawMachine
                 grabTrigger={grabCount}
                 moveDirection={moveDir}
@@ -106,7 +110,7 @@ export default function Home() {
             </div>
 
             {/* Controls */}
-            <div className="flex-shrink-0 px-4 py-3 flex items-center gap-3">
+            <div className="game-controls">
               <button
                 data-testid="button-move-left"
                 onPointerDown={() => startMove('left')}
@@ -114,27 +118,15 @@ export default function Home() {
                 onPointerLeave={stopMove}
                 onPointerCancel={stopMove}
                 disabled={isGrabbing}
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold flex-shrink-0 select-none active:scale-95 transition-transform"
-                style={{
-                  background: 'rgba(187,154,247,0.1)',
-                  color: isGrabbing ? 'rgba(192,202,245,0.25)' : '#BB9AF7',
-                  border: '1px solid rgba(187,154,247,0.2)',
-                }}
+                className="ctrl-btn"
+                style={{ touchAction: 'none' }}
               >◀</button>
 
               <button
                 data-testid="button-grab"
                 onClick={handleGrab}
                 disabled={isGrabbing}
-                className="flex-1 h-14 rounded-2xl font-black text-sm tracking-widest uppercase select-none transition-all duration-150 active:scale-95"
-                style={{
-                  background: isGrabbing
-                    ? 'rgba(187,154,247,0.08)'
-                    : 'linear-gradient(135deg, #BB9AF7 0%, #7AA2F7 50%, #FF6B9D 100%)',
-                  color: isGrabbing ? 'rgba(192,202,245,0.3)' : '#fff',
-                  boxShadow: isGrabbing ? 'none' : '0 0 28px rgba(187,154,247,0.4), 0 4px 16px rgba(0,0,0,0.4)',
-                  cursor: isGrabbing ? 'not-allowed' : 'pointer',
-                }}
+                className="grab-btn"
               >
                 {isGrabbing ? '⏳ Хватаю...' : '🦾 ХВАТАЙ!'}
               </button>
@@ -146,12 +138,8 @@ export default function Home() {
                 onPointerLeave={stopMove}
                 onPointerCancel={stopMove}
                 disabled={isGrabbing}
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold flex-shrink-0 select-none active:scale-95 transition-transform"
-                style={{
-                  background: 'rgba(187,154,247,0.1)',
-                  color: isGrabbing ? 'rgba(192,202,245,0.25)' : '#BB9AF7',
-                  border: '1px solid rgba(187,154,247,0.2)',
-                }}
+                className="ctrl-btn"
+                style={{ touchAction: 'none' }}
               >▶</button>
             </div>
           </>
