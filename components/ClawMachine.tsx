@@ -167,21 +167,6 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
     }
   }, [grabTrigger])
 
-  useEffect(() => {
-    if (!isGrabbing && phase.current === 'done') {
-      const t = setTimeout(() => {
-        phase.current = 'idle'
-        clawDescent.current = 0
-        clawScale.current = 1
-        caughtIdx.current = -1
-        droppedRef.current = false
-        resolvedRef.current = false
-        outcomeRef.current = null
-        completeFired.current = false
-      }, 2700)
-      return () => clearTimeout(t)
-    }
-  }, [isGrabbing])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -391,7 +376,19 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
         closingFrame.current++
         if (closingFrame.current === 1 && !completeFired.current) {
           completeFired.current = true
-          setTimeout(() => onAnimationCompleteRef.current(), 2500)
+          setTimeout(() => {
+            // Reset phase BEFORE calling onAnimationComplete so the button
+            // re-enables at the same time phase returns to idle — no race condition
+            phase.current = 'idle'
+            clawDescent.current = 0
+            clawScale.current = 1
+            caughtIdx.current = -1
+            droppedRef.current = false
+            resolvedRef.current = false
+            outcomeRef.current = null
+            completeFired.current = false
+            onAnimationCompleteRef.current()
+          }, 2500)
         }
       }
 
