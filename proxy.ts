@@ -5,7 +5,7 @@ import { jwtVerify } from 'jose'
 const secret = new TextEncoder().encode(process.env.ADMIN_TOKEN_SECRET!)
 const COOKIE_NAME = 'admin_token'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   const isAdminRoute =
