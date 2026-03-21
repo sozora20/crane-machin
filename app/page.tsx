@@ -82,7 +82,7 @@ export default function Home() {
     <div className="game-root">
       {/* Header */}
       <header className="game-header">
-        <h1 className="gradient-text font-black text-base sm:text-lg tracking-tight">🎰 Grab-a-Prize</h1>
+        <h1 className="gradient-text font-bold text-base sm:text-lg tracking-widest uppercase">GRAB-A-PRIZE</h1>
         <div className="flex items-center gap-2">
           <AmbientMusic />
           <div className="attempts-badge">

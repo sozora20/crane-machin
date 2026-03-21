@@ -200,7 +200,7 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
       ctx.clearRect(0, 0, w, h)
 
       const bg = ctx.createLinearGradient(0, 0, 0, h)
-      bg.addColorStop(0, '#111220'); bg.addColorStop(1, '#0B0C16')
+      bg.addColorStop(0, '#18181e'); bg.addColorStop(1, '#141418')
       ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h)
 
       const left = w * 0.04, right = w * 0.96
@@ -208,25 +208,25 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
       const floorY = h * 0.77
 
       ctx.save()
-      ctx.shadowColor = 'rgba(187,154,247,0.3)'; ctx.shadowBlur = 22
-      ctx.strokeStyle = 'rgba(187,154,247,0.18)'; ctx.lineWidth = 1.5
+      ctx.shadowColor = 'rgba(255,44,61,0.25)'; ctx.shadowBlur = 22
+      ctx.strokeStyle = 'rgba(255,44,61,0.18)'; ctx.lineWidth = 1.5
       ctx.beginPath(); (ctx as any).roundRect(left, top, right - left, bottom - top, 18); ctx.stroke()
       ctx.restore()
 
       const strip = ctx.createLinearGradient(left, 0, right, 0)
-      strip.addColorStop(0, 'rgba(230,184,255,0.65)'); strip.addColorStop(0.33, 'rgba(122,162,247,0.65)')
-      strip.addColorStop(0.66, 'rgba(255,107,157,0.65)'); strip.addColorStop(1, 'rgba(255,215,0,0.65)')
+      strip.addColorStop(0, 'rgba(255,44,61,0.8)'); strip.addColorStop(0.5, 'rgba(22,127,255,0.8)')
+      strip.addColorStop(1, 'rgba(255,44,61,0.8)')
       ctx.fillStyle = strip
       ctx.beginPath(); (ctx as any).roundRect(left, top, right - left, 5, [18, 18, 0, 0]); ctx.fill()
 
-      ctx.fillStyle = 'rgba(187,154,247,0.05)'
+      ctx.fillStyle = 'rgba(255,44,61,0.04)'
       for (let gx = left + 24; gx < right; gx += 28)
         for (let gy = top + 24; gy < floorY; gy += 28) {
           ctx.beginPath(); ctx.arc(gx, gy, 1.1, 0, Math.PI * 2); ctx.fill()
         }
 
-      ctx.fillStyle = 'rgba(6,6,16,0.97)'; ctx.fillRect(left, floorY, right - left, bottom - floorY)
-      ctx.strokeStyle = 'rgba(187,154,247,0.22)'; ctx.lineWidth = 1
+      ctx.fillStyle = 'rgba(8,8,12,0.97)'; ctx.fillRect(left, floorY, right - left, bottom - floorY)
+      ctx.strokeStyle = 'rgba(255,44,61,0.2)'; ctx.lineWidth = 1
       ctx.beginPath(); ctx.moveTo(left, floorY); ctx.lineTo(right, floorY); ctx.stroke()
 
       const chuteW = (right - left) * 0.44
@@ -480,25 +480,25 @@ export default function ClawMachine({ grabTrigger, moveDirection, onResolveGrab,
 
       // ── Track ─────────────────────────────────────────────────
       ctx.save()
-      ctx.strokeStyle = 'rgba(187,154,247,0.16)'; ctx.lineWidth = 7; ctx.lineCap = 'round'
+      ctx.strokeStyle = 'rgba(255,44,61,0.15)'; ctx.lineWidth = 7; ctx.lineCap = 'round'
       ctx.beginPath(); ctx.moveTo(left + 16, trackY); ctx.lineTo(right - 16, trackY); ctx.stroke()
-      ctx.shadowColor = '#BB9AF7'; ctx.shadowBlur = 14
+      ctx.shadowColor = '#ff2c3d'; ctx.shadowBlur = 14
       const dotGrad = ctx.createRadialGradient(cx - 2, trackY - 2, 1, cx, trackY, 8)
-      dotGrad.addColorStop(0, '#F5EEFF'); dotGrad.addColorStop(1, '#BB9AF7')
+      dotGrad.addColorStop(0, '#ffffff'); dotGrad.addColorStop(1, '#ff2c3d')
       ctx.fillStyle = dotGrad; ctx.beginPath(); ctx.arc(cx, trackY, 8, 0, Math.PI * 2); ctx.fill()
       ctx.restore()
 
       const ropeY = trackY + 30 + clawDescent.current
       ctx.save(); ctx.setLineDash([5, 5])
-      ctx.strokeStyle = 'rgba(187,154,247,0.3)'; ctx.lineWidth = 1.5
+      ctx.strokeStyle = 'rgba(255,44,61,0.25)'; ctx.lineWidth = 1.5
       ctx.beginPath(); ctx.moveTo(cx, trackY + 8); ctx.lineTo(cx, ropeY); ctx.stroke()
       ctx.setLineDash([]); ctx.restore()
 
       // Claw arms
       const clawGrad = ctx.createLinearGradient(cx - armW, ropeY, cx + armW, ropeY + 36)
-      clawGrad.addColorStop(0, '#D8ACFF'); clawGrad.addColorStop(1, '#FF8EC0')
+      clawGrad.addColorStop(0, '#ff2c3d'); clawGrad.addColorStop(1, '#167fff')
       ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'
-      ctx.shadowColor = '#E6B8FF'; ctx.shadowBlur = 18; ctx.strokeStyle = clawGrad; ctx.lineWidth = 3.5
+      ctx.shadowColor = '#ff2c3d'; ctx.shadowBlur = 18; ctx.strokeStyle = clawGrad; ctx.lineWidth = 3.5
       ctx.beginPath(); ctx.moveTo(cx - 3, ropeY); ctx.lineTo(cx - armW, ropeY + 25); ctx.stroke()
       ctx.beginPath(); ctx.moveTo(cx - armW, ropeY + 25); ctx.lineTo(cx - armW + 5, ropeY + CLAW_ARM_LENGTH); ctx.stroke()
       ctx.beginPath(); ctx.moveTo(cx + 3, ropeY); ctx.lineTo(cx + armW, ropeY + 25); ctx.stroke()

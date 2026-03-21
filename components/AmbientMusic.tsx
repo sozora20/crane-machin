@@ -170,9 +170,9 @@ export default function AmbientMusic() {
       title={playing ? 'Выключить музыку' : 'Включить музыку'}
       className="w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all"
       style={{
-        background: playing ? 'rgba(187,154,247,0.2)' : 'rgba(255,255,255,0.06)',
-        color: playing ? '#BB9AF7' : 'rgba(192,202,245,0.4)',
-        border: playing ? '1px solid rgba(187,154,247,0.4)' : '1px solid rgba(255,255,255,0.08)',
+        background: playing ? 'rgba(255,44,61,0.15)' : 'rgba(255,255,255,0.06)',
+        color: playing ? '#ff2c3d' : 'rgba(225,225,225,0.35)',
+        border: playing ? '1px solid rgba(255,44,61,0.35)' : '1px solid rgba(255,255,255,0.08)',
       }}
     >
       {playing ? '🎵' : '🔇'}

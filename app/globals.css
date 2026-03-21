@@ -1,21 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #BB9AF7;
-  --color-accent: #7AA2F7;
-  --color-pink: #FF6B9D;
+  --color-primary: #ff2c3d;
+  --color-accent: #167fff;
+  --color-pink: #ff2c3d;
   --color-gold: #FFD700;
-  --font-sans: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Space Grotesk', Arial, sans-serif;
 }
 
 :root {
-  --bg-primary: #1A1B26;
-  --bg-deep: #0B0C16;
-  --bg-mid: #111220;
-  --text-primary: #C0CAF5;
-  --accent-purple: #BB9AF7;
-  --accent-blue: #7AA2F7;
+  --bg-primary: #1d1d22;
+  --bg-deep: #141418;
+  --bg-mid: #18181e;
+  --text-primary: #e1e1e1;
+  --accent-red: #ff2c3d;
+  --accent-blue: #167fff;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -54,7 +53,7 @@ html, body {
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px 8px;
-  border-bottom: 1px solid rgba(187, 154, 247, 0.08);
+  border-bottom: 1px solid rgba(255, 44, 61, 0.12);
 }
 
 .game-main {
@@ -92,35 +91,35 @@ html, body {
   justify-content: center;
   font-size: 20px;
   font-weight: 700;
-  background: rgba(187, 154, 247, 0.1);
-  color: #BB9AF7;
-  border: 1px solid rgba(187, 154, 247, 0.2);
+  background: rgba(255, 44, 61, 0.08);
+  color: #ff2c3d;
+  border: 1px solid rgba(255, 44, 61, 0.25);
   cursor: pointer;
-  transition: transform 0.1s, opacity 0.1s;
+  transition: transform 0.1s, opacity 0.1s, background 0.1s;
   user-select: none;
 }
 
 .ctrl-btn:disabled {
-  opacity: 0.25;
+  opacity: 0.2;
   cursor: not-allowed;
 }
 
 .ctrl-btn:not(:disabled):active {
   transform: scale(0.92);
-  background: rgba(187, 154, 247, 0.22);
+  background: rgba(255, 44, 61, 0.2);
 }
 
 .grab-btn {
   flex: 1;
   height: 56px;
-  border-radius: 18px;
-  font-weight: 900;
+  border-radius: 30px;
+  font-weight: 700;
   font-size: clamp(12px, 3.5vw, 15px);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #fff;
-  background: linear-gradient(135deg, #BB9AF7 0%, #7AA2F7 50%, #FF6B9D 100%);
-  box-shadow: 0 0 28px rgba(187, 154, 247, 0.4), 0 4px 16px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(135deg, #ff2c3d 0%, #167fff 100%);
+  box-shadow: 0 0 24px rgba(255, 44, 61, 0.35), 0 4px 16px rgba(0, 0, 0, 0.4);
   cursor: pointer;
   transition: transform 0.1s, box-shadow 0.1s;
   user-select: none;
@@ -128,15 +127,15 @@ html, body {
 }
 
 .grab-btn:disabled {
-  background: rgba(187, 154, 247, 0.08);
-  color: rgba(192, 202, 245, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(225, 225, 225, 0.25);
   box-shadow: none;
   cursor: not-allowed;
 }
 
 .grab-btn:not(:disabled):active {
   transform: scale(0.97);
-  box-shadow: 0 0 12px rgba(187, 154, 247, 0.3);
+  box-shadow: 0 0 10px rgba(255, 44, 61, 0.25);
 }
 
 /* ── Attempts badge ───────────────────────────────────────── */
@@ -147,22 +146,23 @@ html, body {
   padding: 5px 11px;
   border-radius: 999px;
   font-size: 13px;
-  font-weight: 700;
-  background: rgba(187, 154, 247, 0.12);
-  color: #BB9AF7;
+  font-weight: 600;
+  background: rgba(255, 44, 61, 0.1);
+  color: #ff2c3d;
+  border: 1px solid rgba(255, 44, 61, 0.2);
 }
 
 /* ── Glass panel ──────────────────────────────────────────── */
 .glass-panel {
-  background: rgba(26, 27, 38, 0.8);
-  border: 1px solid rgba(230, 184, 255, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(29, 29, 34, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 /* ── Gradient text ────────────────────────────────────────── */
 .gradient-text {
-  background: linear-gradient(135deg, #E6B8FF 0%, #7AA2F7 50%, #FF6B9D 100%);
+  background: linear-gradient(135deg, #ff2c3d 0%, #ff6b7a 40%, #167fff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
