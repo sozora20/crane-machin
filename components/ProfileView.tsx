@@ -20,6 +20,11 @@ function getTitle(games: number) {
 
 interface Stats { games: number; wins: number; streak: number; lastDate: string }
 
+const card = {
+  background: 'rgba(255,255,255,0.04)',
+  border: '1px solid rgba(255,255,255,0.08)',
+}
+
 export default function ProfileView() {
   const [stats, setStats] = useState<Stats>({ games: 0, wins: 0, streak: 0, lastDate: '' })
 
@@ -34,15 +39,21 @@ export default function ProfileView() {
   const title = getTitle(stats.games)
 
   return (
-    <div className="h-full overflow-y-auto px-4 py-4 space-y-3">
+    <div className="h-full overflow-y-auto px-4 py-5 space-y-3">
       {/* Avatar + name */}
-      <div className="rounded-2xl p-4 flex items-center gap-4" style={{ background: 'rgba(26,27,38,0.8)', border: '1px solid rgba(230,184,255,0.1)' }}>
-        <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl flex-shrink-0" style={{ background: 'linear-gradient(135deg, #BB9AF7, #7AA2F7)' }}>
+      <div className="rounded-2xl p-4 flex items-center gap-4" style={card}>
+        <div
+          className="w-14 h-14 rounded-full flex items-center justify-center text-2xl flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg, #ff2c3d 0%, #167fff 100%)' }}
+        >
           👤
         </div>
         <div>
-          <div className="font-black text-lg" style={{ color: '#C0CAF5' }}>Игрок</div>
-          <div className="mt-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold inline-block" style={{ background: 'rgba(230,184,255,0.15)', color: '#E6B8FF' }}>
+          <div className="font-semibold text-base" style={{ color: '#ffffff' }}>Игрок</div>
+          <div
+            className="mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-widest uppercase inline-block"
+            style={{ background: 'rgba(255,44,61,0.15)', color: '#ff2c3d', border: '1px solid rgba(255,44,61,0.25)' }}
+          >
             {title.current}
           </div>
         </div>
@@ -53,59 +64,60 @@ export default function ProfileView() {
         {[
           { label: 'Игр', value: stats.games },
           { label: 'Побед', value: stats.wins },
-          { label: 'Процент', value: `${winPct}%` },
+          { label: 'Win%', value: `${winPct}%` },
           { label: 'Серия', value: stats.streak },
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-xl p-2.5 text-center" style={{ background: 'rgba(26,27,38,0.8)', border: '1px solid rgba(230,184,255,0.08)' }}>
-            <div className="text-xl font-black" style={{ color: '#C0CAF5' }}>{value}</div>
-            <div className="text-[9px] mt-0.5" style={{ color: '#565B7E' }}>{label}</div>
+          <div key={label} className="rounded-xl p-2.5 text-center" style={card}>
+            <div className="text-xl font-bold" style={{ color: '#ffffff' }}>{value}</div>
+            <div className="text-[9px] mt-0.5 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</div>
           </div>
         ))}
       </div>
 
       {/* Attempts */}
-      <div className="rounded-2xl p-4 flex items-center justify-between" style={{ background: 'rgba(26,27,38,0.8)', border: '1px solid rgba(230,184,255,0.1)' }}>
+      <div className="rounded-2xl p-4 flex items-center justify-between" style={card}>
         <div>
-          <div className="font-bold text-sm" style={{ color: '#C0CAF5' }}>Доступно попыток</div>
-          <div className="text-xs mt-0.5" style={{ color: '#565B7E' }}>Обновляется в 00:00 МСК</div>
+          <div className="font-semibold text-sm" style={{ color: '#ffffff' }}>Доступно попыток</div>
+          <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Обновляется в 00:00 МСК</div>
         </div>
-        <div className="text-4xl font-black" style={{ color: '#BB9AF7' }}>∞</div>
+        <div className="text-4xl font-bold" style={{ color: '#ff2c3d' }}>∞</div>
       </div>
 
       {/* Title progress */}
       {title.next && (
-        <div className="rounded-2xl p-4" style={{ background: 'rgba(26,27,38,0.8)', border: '1px solid rgba(230,184,255,0.1)' }}>
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-bold" style={{ color: '#C0CAF5' }}>Прогресс до следующего титула</div>
-            <div className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(230,184,255,0.1)', color: '#E6B8FF' }}>
+        <div className="rounded-2xl p-4" style={card}>
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="text-xs font-semibold tracking-wide uppercase" style={{ color: 'rgba(255,255,255,0.5)' }}>До следующего уровня</div>
+            <div className="text-[10px] px-2 py-0.5 rounded-full font-semibold tracking-wide uppercase" style={{ background: 'rgba(22,127,255,0.15)', color: '#167fff' }}>
               {title.next}
             </div>
           </div>
-          <div className="w-full h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
-            <div className="h-2 rounded-full transition-all duration-500" style={{
+          <div className="w-full h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
+            <div className="h-1.5 rounded-full transition-all duration-500" style={{
               width: `${Math.min(title.progress * 100, 100)}%`,
-              background: 'linear-gradient(90deg, #BB9AF7, #7AA2F7)',
+              background: 'linear-gradient(90deg, #ff2c3d, #167fff)',
             }} />
           </div>
-          <div className="text-xs mt-1.5" style={{ color: '#565B7E' }}>
+          <div className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
             {stats.games} / {title.nextAt} игр
           </div>
         </div>
       )}
 
       {/* Titles list */}
-      <div className="rounded-2xl p-4" style={{ background: 'rgba(26,27,38,0.8)', border: '1px solid rgba(230,184,255,0.1)' }}>
-        <div className="text-sm font-bold mb-3" style={{ color: '#C0CAF5' }}>🏆 Титулы</div>
-        <div className="space-y-1.5">
+      <div className="rounded-2xl p-4" style={card}>
+        <div className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>Уровни</div>
+        <div className="space-y-1">
           {TITLES.map((t, i) => {
             const isCurrent = t === title.current
             const isUnlocked = stats.games >= THRESHOLDS[i]
             return (
               <div key={t} className="flex items-center justify-between rounded-xl px-3 py-2" style={{
-                background: isCurrent ? 'rgba(230,184,255,0.15)' : isUnlocked ? 'rgba(187,154,247,0.06)' : 'rgba(255,255,255,0.02)',
+                background: isCurrent ? 'rgba(255,44,61,0.12)' : 'transparent',
+                borderLeft: isCurrent ? '2px solid #ff2c3d' : '2px solid transparent',
               }}>
-                <span className="text-sm font-semibold" style={{ color: isCurrent ? '#E6B8FF' : isUnlocked ? '#C0CAF5' : '#565B7E' }}>{t}</span>
-                <span className="text-xs" style={{ color: isCurrent ? '#E6B8FF' : '#565B7E' }}>
+                <span className="text-sm font-medium" style={{ color: isCurrent ? '#ffffff' : isUnlocked ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)' }}>{t}</span>
+                <span className="text-[10px] uppercase tracking-wide" style={{ color: isCurrent ? '#ff2c3d' : 'rgba(255,255,255,0.25)' }}>
                   {THRESHOLDS[i] === 0 ? 'старт' : `${THRESHOLDS[i]} игр`}
                 </span>
               </div>

@@ -2,7 +2,7 @@ export function playLoseSound() {
   try {
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
     const master = ctx.createGain()
-    master.gain.value = 0.45
+    master.gain.value = 0.18
     master.connect(ctx.destination)
 
     const filt = ctx.createBiquadFilter()
@@ -29,8 +29,8 @@ export function playLoseSound() {
       osc.frequency.linearRampToValueAtTime(endFreq, t + dur)
 
       g.gain.setValueAtTime(0, t)
-      g.gain.linearRampToValueAtTime(0.55, t + 0.03)
-      g.gain.setValueAtTime(0.55, t + dur - 0.06)
+      g.gain.linearRampToValueAtTime(0.28, t + 0.03)
+      g.gain.setValueAtTime(0.28, t + dur - 0.06)
       g.gain.linearRampToValueAtTime(0, t + dur)
 
       osc.connect(g); g.connect(filt)
@@ -43,7 +43,7 @@ export function playLoseSound() {
       osc2.frequency.setValueAtTime(freq * 0.5, t)
       osc2.frequency.linearRampToValueAtTime(endFreq * 0.5, t + dur)
       g2.gain.setValueAtTime(0, t)
-      g2.gain.linearRampToValueAtTime(0.18, t + 0.03)
+      g2.gain.linearRampToValueAtTime(0.09, t + 0.03)
       g2.gain.linearRampToValueAtTime(0, t + dur)
       osc2.connect(g2); g2.connect(filt)
       osc2.start(t); osc2.stop(t + dur)
@@ -56,7 +56,7 @@ export function playLoseSound() {
     const bt = ctx.currentTime + 1.55
     bwonk.frequency.setValueAtTime(180, bt)
     bwonk.frequency.exponentialRampToValueAtTime(60, bt + 0.35)
-    bg.gain.setValueAtTime(0.5, bt)
+    bg.gain.setValueAtTime(0.22, bt)
     bg.gain.exponentialRampToValueAtTime(0.001, bt + 0.35)
     bwonk.connect(bg); bg.connect(master)
     bwonk.start(bt); bwonk.stop(bt + 0.4)
